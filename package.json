@@ -1,0 +1,29 @@
+{
+  "name": "c4mq",
+  "version": "0.0.1",
+  "description": "C4FrameworkMQ",
+  "main": "out",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sextants/C4MQ.git"
+  },
+  "keywords": [
+    "C4Framework",
+    "MQ"
+  ],
+  "author": "Sextant",
+  "bugs": {
+    "url": "https://github.com/Sextants/C4MQ.git"
+  },
+  "dependencies": {
+    "@types/amqp": "^0.2.4",
+    "@types/glob": "^5.0.35",
+    "amqp": "^0.2.6",
+    "c4utils": "0.0.2",
+    "glob": "^7.1.2",
+    "reflect-metadata": "^0.1.12"
+  }
+}
