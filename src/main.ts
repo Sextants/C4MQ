@@ -40,7 +40,7 @@ async function Launch() {
     MQConn = new C4MQ();
     try {
         await MQConn.init({
-            host : "host",
+            host : "host",  // <any>[ "host0", "host1", "host2" ] // 连接Cluster
             port : 5672,
             login : "username",
             password : "password",
@@ -48,7 +48,7 @@ async function Launch() {
             authMechanism : "AMQPLAIN",
             vhost : "/",
             noDelay : true,
-            // heartbeat : 50,
+            heartbeat : 50,
             clientProperties : {
                 applicationName : "C4MQ"
             }

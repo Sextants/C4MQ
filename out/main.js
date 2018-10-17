@@ -56,7 +56,7 @@ function Launch() {
                 authMechanism: "AMQPLAIN",
                 vhost: "/",
                 noDelay: true,
-                // heartbeat : 50,
+                heartbeat: 50,
                 clientProperties: {
                     applicationName: "C4MQ"
                 }
