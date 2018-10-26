@@ -14,6 +14,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const C4MQ_1 = __importDefault(require("./C4MQ"));
 const C4Publisher_1 = __importDefault(require("./C4Publisher"));
 const C4Subscriber_1 = __importDefault(require("./C4Subscriber"));
+const testHandler_1 = require("./testHandler");
 let MQConn;
 let CurPublihser;
 let CurPublihser2;
@@ -50,7 +51,7 @@ function Launch() {
             yield MQConn.init({
                 host: "host",
                 port: 5672,
-                login: "username",
+                login: "user",
                 password: "password",
                 connectionTimeout: 30000,
                 authMechanism: "AMQPLAIN",
@@ -103,6 +104,7 @@ function Launch() {
             process.exit(-1);
         }
         CurSubscriber.addMQHandler(["Hello"]);
+        CurSubscriber.addSubscribe(testHandler_1.defineHandler());
         // CurSubscriber.addSubscribe({
         //     //
         // });

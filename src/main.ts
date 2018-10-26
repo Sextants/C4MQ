@@ -1,6 +1,7 @@
 import C4MQ from "./C4MQ";
 import C4Publisher from "./C4Publisher";
 import C4Subscriber from "./C4Subscriber";
+import { defineHandler } from "./testHandler";
 
 let MQConn : C4MQ;
 let CurPublihser  : C4Publisher;
@@ -42,7 +43,7 @@ async function Launch() {
         await MQConn.init({
             host : "host",  // <any>[ "host0", "host1", "host2" ] // 连接Cluster
             port : 5672,
-            login : "username",
+            login : "user",
             password : "password",
             connectionTimeout : 30000,
             authMechanism : "AMQPLAIN",
@@ -104,6 +105,7 @@ async function Launch() {
     }
 
     CurSubscriber.addMQHandler(["Hello"]);
+    CurSubscriber.addSubscribe(defineHandler());
     // CurSubscriber.addSubscribe({
     //     //
     // });
