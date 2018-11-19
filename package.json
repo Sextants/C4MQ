@@ -1,6 +1,6 @@
 {
   "name": "c4-mq",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "C4FrameworkMQ",
   "main": "out",
   "scripts": {
@@ -22,7 +22,7 @@
     "@types/amqp": "^0.2.4",
     "@types/glob": "^5.0.35",
     "amqp": "^0.2.6",
-    "c4utils": "0.0.2",
+    "c4utils": "0.0.3",
     "glob": "^7.1.2",
     "reflect-metadata": "^0.1.12"
   }
