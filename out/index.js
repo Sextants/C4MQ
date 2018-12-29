@@ -28,4 +28,6 @@ const C4MQAnnotationOption = __importStar(require("./Annotation/MQHandlerType"))
 exports.C4MQAnnotationOption = C4MQAnnotationOption;
 const C4MQAnnotationUtils = __importStar(require("./Annotation/MQHandlerUtils"));
 exports.C4MQAnnotationUtils = C4MQAnnotationUtils;
+const C4MQHelper_1 = __importDefault(require("./C4MQHelper"));
+exports.C4MQHelper = C4MQHelper_1.default;
 //# sourceMappingURL=index.js.map

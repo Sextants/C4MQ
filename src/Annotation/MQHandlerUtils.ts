@@ -11,7 +11,7 @@ export function getMQHandlers(arg : Array<any | string>, debug : boolean = false
         './out/MQHandlers/'
     ];
 
-    if (TypeUtils.isArray(arg) && arg.length > 0) {
+    if (TypeUtils.isArray(arg) && arg.length > 0 && TypeUtils.isString(arg[0])) {
         let Models : any[] = [];
         for (let i = 0; i < TargetDir.length; i++) {
             let LoadPaths   = arg.reduce((paths : any[], dir) => {

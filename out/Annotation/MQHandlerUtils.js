@@ -17,7 +17,7 @@ function getMQHandlers(arg, debug = false) {
         './MQHandlers/',
         './out/MQHandlers/'
     ];
-    if (c4utils_1.TypeUtils.isArray(arg) && arg.length > 0) {
+    if (c4utils_1.TypeUtils.isArray(arg) && arg.length > 0 && c4utils_1.TypeUtils.isString(arg[0])) {
         let Models = [];
         for (let i = 0; i < TargetDir.length; i++) {
             let LoadPaths = arg.reduce((paths, dir) => {

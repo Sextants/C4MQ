@@ -11,13 +11,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const C4MQ_1 = __importDefault(require("./C4MQ"));
-const C4Publisher_1 = __importDefault(require("./C4Publisher"));
-const C4Subscriber_1 = __importDefault(require("./C4Subscriber"));
-const testHandler_1 = require("./testHandler");
+const C4MQHelper_1 = __importDefault(require("./C4MQHelper"));
 let MQConn;
 let CurPublihser;
-let CurPublihser2;
+// let CurPublihser2 : C4Publisher;
 let CurSubscriber;
 let Count = 0;
 let Begin = 0;
@@ -30,10 +27,10 @@ function Publish() {
         msgType: "Hello",
         msg: Count++
     });
-    CurPublihser2.publish({
-        msgType: "Test",
-        msg: Count + 10
-    }, "testKey1");
+    // CurPublihser2.publish({
+    //     msgType : "Test",
+    //     msg : Count + 10
+    // }, "testKey1")
     if (Count > 10) {
         End = (new Date()).getTime();
         console.log("Used : " + (End - Begin));
@@ -46,71 +43,123 @@ function Publish() {
 }
 function Launch() {
     return __awaiter(this, void 0, void 0, function* () {
-        MQConn = new C4MQ_1.default();
-        try {
-            yield MQConn.init({
-                host: "host",
-                port: 5672,
-                login: "user",
-                password: "password",
-                connectionTimeout: 30000,
-                authMechanism: "AMQPLAIN",
-                vhost: "/",
-                noDelay: true,
-                heartbeat: 50,
-                clientProperties: {
-                    applicationName: "C4MQ"
+        const curHelper = yield C4MQHelper_1.default.create({
+            connections: [
+                {
+                    name: "TestMQConnection",
+                    host: "",
+                    port: 5672,
+                    login: "",
+                    password: "",
+                    connectionTimeout: 30000,
+                    authMechanism: "AMQPLAIN",
+                    vhost: "/",
+                    noDelay: true,
+                    heartbeat: 50,
+                    clientProperties: {
+                        applicationName: "C4MQ"
+                    }
                 }
-            }, console);
-        }
-        catch (error) {
-            console.log(error);
-            process.exit(-1);
-        }
-        CurPublihser = new C4Publisher_1.default();
-        let Res = yield CurPublihser.init(MQConn, {
-            name: "C4MQTestExchange0",
-            routingKey: "testKey",
-            type: 'direct',
-            durable: true,
-            autoDelete: false,
-            confirm: true,
-            publicOption: {}
+            ],
+            publishers: [
+                {
+                    name: "TestPublisher",
+                    connection: "TestMQConnection",
+                    routingKey: "testKey",
+                    type: "direct",
+                    durable: true,
+                    autoDelete: false,
+                    confirm: true,
+                    publicOption: {}
+                }
+            ],
+            subscribers: [
+                {
+                    name: "TestSubscriber",
+                    connection: "TestMQConnection",
+                    publisherName: "TestPublisher",
+                    durable: true,
+                    autoDelete: false,
+                    handlers: ["Hello"],
+                    subscribeLater: false
+                }
+            ],
+            handlerLoadPaths: [
+                './out/MQHandlers'
+            ],
+            handlerType: "standard"
         }, console);
-        CurPublihser2 = new C4Publisher_1.default();
-        Res = yield CurPublihser2.init(MQConn, {
-            name: "C4MQTestExchange2",
-            routingKey: "testKey1",
-            type: 'topic',
-            durable: true,
-            autoDelete: false,
-            confirm: true,
-            publicOption: {}
-        }, console);
-        if (!Res) {
-            process.exit(-1);
+        if (curHelper) {
+            CurPublihser = curHelper.getPublisher("TestPublisher");
+            Begin = (new Date()).getTime();
+            Publish();
         }
-        CurSubscriber = new C4Subscriber_1.default();
-        Res = yield CurSubscriber.init(MQConn, {
-            name: "C4MQTestQueue0",
-            publisherName: "C4MQTestExchange0",
-            durable: true,
-            autoDelete: false
-        }, console);
-        if (!Res) {
-            process.exit(-1);
-        }
-        if (!Res) {
-            process.exit(-1);
-        }
-        CurSubscriber.addMQHandler(["Hello"]);
-        CurSubscriber.addSubscribe(testHandler_1.defineHandler());
-        // CurSubscriber.addSubscribe({
-        //     //
-        // });
-        yield CurSubscriber.subscribe();
-        Begin = (new Date()).getTime();
-        Publish();
+        // MQConn = new C4MQ();
+        // try {
+        //     await MQConn.init({
+        //         host : "",  // <any>[ "host0", "host1", "host2" ] // 连接Cluster
+        //         port : 5672,
+        //         login : "",
+        //         password : "",
+        //         connectionTimeout : 30000,
+        //         authMechanism : "AMQPLAIN",
+        //         vhost : "/",
+        //         noDelay : true,
+        //         heartbeat : 50,
+        //         clientProperties : {
+        //             applicationName : "C4MQ"
+        //         }
+        //     }, console);
+        // } catch (error) {
+        //     console.log(error);
+        //     process.exit(-1);
+        // }
+        // CurPublihser    = new C4Publisher();
+        // let Res = await CurPublihser.init(MQConn, {
+        //     name : "C4MQTestExchange0",
+        //     routingKey : "testKey",
+        //     type : 'direct',
+        //     durable : true,
+        //     autoDelete : false,
+        //     confirm : true,
+        //     publicOption : {
+        //     }
+        // }, console);
+        // CurPublihser2   = new C4Publisher();
+        // Res = await CurPublihser2.init(MQConn, {
+        //     name : "C4MQTestExchange2",
+        //     routingKey : "testKey1",
+        //     type : 'topic',
+        //     durable : true,
+        //     autoDelete : false,
+        //     confirm : true,
+        //     publicOption : {
+        //     }
+        // }, console)
+        // if (!Res) {
+        //     process.exit(-1);
+        // }
+        // CurSubscriber   = new C4Subscriber();
+        // let Res = await CurSubscriber.init(MQConn, {
+        //     name : "C4MQTestQueue0",
+        //     publisherName : "C4MQTestExchange0",
+        //     durable : true,
+        //     autoDelete : false
+        // }, console);
+        // if (!Res) {
+        //     process.exit(-1);
+        // }
+        // if (!Res) {
+        //     process.exit(-1);
+        // }
+        // CurSubscriber.addMQHandler(["Hello"]);
+        // CurSubscriber.addSubscribe(defineHandler());
+        // // CurSubscriber.addSubscribe({
+        // //     //
+        // // });
+        // await CurSubscriber.subscribe();
+        // Begin = (new Date()).getTime();
+        // Publish();
         //
     });
 }

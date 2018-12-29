@@ -3,7 +3,7 @@ import { MQHandler, MsgBody } from "../Annotation/MQHandler";
 export default class Hello {
 
     @MQHandler({
-        PublisherName : "C4MQTestExchange0",
+        PublisherName : "TestPublisher",
         RoutingKey : "testKey",
         MsgType : "Hello"
     })
@@ -20,7 +20,7 @@ export default class Hello {
     }
 
     @MQHandler({
-        PublisherName : "C4MQTestExchange2",
+        PublisherName : "TestPublisher",
         RoutingKey : "testKey1",
         MsgType : "Test"
     })

@@ -313,3 +313,21 @@ export interface C4SubscriberOption extends QueueOptions {
 }
 export declare const DEFAULT_PUBLISHER = "@_Default_Publisher_@";
 export declare const DEFAULT_ROUTE = "@_Default_Route_@";
+export interface IExtConnectionOptions extends ConnectionOptions {
+    name: string;
+}
+export interface IExtPublisherOption extends C4PublisherOption {
+    connection: string;
+}
+export interface IExtSubscriberOption extends C4SubscriberOption {
+    connection: string;
+    handlers: string[] | any[];
+    subscribeLater: boolean;
+}
+export interface IC4MQHelperOptions {
+    connections: IExtConnectionOptions[];
+    publishers: IExtPublisherOption[];
+    subscribers: IExtSubscriberOption[];
+    handlerLoadPaths: string[];
+    handlerType?: "standard" | "";
+}

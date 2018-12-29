@@ -45,7 +45,7 @@ class Hello {
 }
 __decorate([
     MQHandler_1.MQHandler({
-        PublisherName: "C4MQTestExchange0",
+        PublisherName: "TestPublisher",
         RoutingKey: "testKey",
         MsgType: "Hello"
     }),
@@ -58,7 +58,7 @@ __decorate([
 ], Hello, "Test", null);
 __decorate([
     MQHandler_1.MQHandler({
-        PublisherName: "C4MQTestExchange2",
+        PublisherName: "TestPublisher",
         RoutingKey: "testKey1",
         MsgType: "Test"
     }),

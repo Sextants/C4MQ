@@ -7,4 +7,5 @@ import C4Subscriber from './C4Subscriber';
 import * as C4MQAnnotation from './Annotation/MQHandler';
 import * as C4MQAnnotationOption from './Annotation/MQHandlerType';
 import * as C4MQAnnotationUtils from './Annotation/MQHandlerUtils';
-export { C4MQTypes, C4MQ, C4Exchange, C4Queue, C4Publisher, C4Subscriber, C4MQAnnotation, C4MQAnnotationOption, C4MQAnnotationUtils };
+import C4MQHelper from './C4MQHelper';
+export { C4MQTypes, C4MQ, C4Exchange, C4Queue, C4Publisher, C4Subscriber, C4MQAnnotation, C4MQAnnotationOption, C4MQAnnotationUtils, C4MQHelper };
