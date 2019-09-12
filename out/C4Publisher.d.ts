@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { C4PublisherOption, ExchangePublishOptions } from "./C4MQTypes/C4MQTypes";
 import C4MQ from "./C4MQ";
 export default class C4Publisher {

@@ -1,6 +1,6 @@
 {
   "name": "c4-mq",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "C4FrameworkMQ",
   "main": "out",
   "scripts": {

@@ -25,7 +25,9 @@ C4MQ是基于amqp模块构建的MQ操作类（模块），并提供了更高级�
 
 <h2>使用</h2>
 
-* 使用MQHandler注解对方法进行标记，提供消息处理方法；
+  #### 快速上手示例，参考./src/main.ts
+
+  #### 使用MQHandler注解对方法进行标记，提供消息处理方法；
 
   * 注解项包含：
 
@@ -49,6 +51,37 @@ C4MQ是基于amqp模块构建的MQ操作类（模块），并提供了更高级�
   ```
 
 * 具体示例参考./src/MQHandlers/Hello.ts
+
+#### 也可以声明对象的方式（JS环境下不能使用注解时），提供消息处理方法：
+  * 对象包含：
+
+  ```
+  {
+    publisherName: "要绑定得Exchange（Publisher）名",
+    routingKey: "route key，现在支持 * 和 # 通配符",
+    subscribeOption: {
+      ack: true,        // true为手动ack，建议使用
+      prefetchCount: 6  // 预读取数量（提高读取性能），使用手动ack时，不会对可靠性造成影响
+    },
+    CBs: {  // 消息处理函数
+      “msgType 的值，与要处理的msgType值一一对应”: async function(msg: any,
+        headers: any,
+        deliveryInfo: any,
+        ack: any) {
+        console.log(msg);
+        return true;
+        // 可选的返回值有true，false和null
+        // true代表消息已经正确处理，rabbitmq可以将该消息删除
+        // false表示处理消息时出现错误，且订阅端希望抛弃这条消息（rabbitmq也会将该消息删除）
+        // null表示处理消息时出现错误，但是订阅端希望消息得以保留（rabbitmq会将该消息重新入队）
+      }
+    }
+  }
+  ```
+* 具体示例参考./src/MQHandlers/TestTopic.ts
+
+注意：注解方式和对象方式声明的消息处理方法不能配置时同时加载，加载注解方式声明的handler时，C4MQHelper的配置中handlerType为"standard"，使用对象方式声明时，handlerType为undefined
+
 
 <h3>类s</h3>
 
@@ -523,6 +556,17 @@ C4MQ是基于amqp模块构建的MQ操作类（模块），并提供了更高级�
 
     <hr>
 
+    * subscribeEx
+
+    ```
+    /**
+     * 开始订阅(支持 * 和 # 通配符的route key)
+     */
+    async subscribeEx()
+    ```
+
+    <hr>
+
     * __processMsg
 
     ```
@@ -530,6 +574,17 @@ C4MQ是基于amqp模块构建的MQ操作类（模块），并提供了更高级�
      * 消息处理方法
      */
     async __processMsg()
+    ```
+
+    <hr>
+
+    * __processMsgEx
+
+    ```
+    /**
+     * 消息处理方法(支持 * 和 # 通配符的route key)
+     */
+    async __processMsgEx()
     ```
 
     <hr>

@@ -144,7 +144,7 @@ class MQHelper {
                             this.mSubscribeLater[curOption.name] = subscriber;
                         }
                         else {
-                            res = yield subscriber.subscribe().then(() => true).catch((err) => {
+                            res = yield subscriber.subscribeEx().then(() => true).catch((err) => {
                                 self.mLogger.error(err);
                                 return false;
                             });
@@ -176,7 +176,7 @@ class MQHelper {
         return __awaiter(this, void 0, void 0, function* () {
             for (const key in this.mSubscribeLater) {
                 const curSub = this.mSubscribeLater[key];
-                yield curSub.subscribe();
+                yield curSub.subscribeEx();
             }
             return true;
         });

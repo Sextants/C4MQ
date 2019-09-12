@@ -3,6 +3,13 @@ import { C4SubscriberOption, C4SubscribeOption, SubscribeCallback, DEFAULT_PUBLI
 import { getMQHandlers, defineMQHandlers } from "./Annotation/MQHandlerUtils";
 import C4Queue from "./C4Queue";
 import { TypeUtils } from "c4utils";
+import C4MQTopicRoute from "./C4MQTypes/C4MQTopicRoute";
+import { DeliveryInfo, Ack } from './C4MQTypes/C4MQTypes';
+
+type MsgCB = (message : any,
+  headers : {[key : string] : any},
+  deliveryInfo : DeliveryInfo,
+  ack : Ack) => Promise<boolean> | boolean;
 
 export default class C4Subscriber {
 
@@ -16,6 +23,10 @@ export default class C4Subscriber {
         }
     } | any;
 
+    private m_ExCBs : {
+      [key: string]: C4MQTopicRoute<{[key: string]: MsgCB}>
+    }
+
     constructor() {
         this.m_Queue            = null;
         this.m_DefaultPublisher = "";
@@ -24,6 +35,7 @@ export default class C4Subscriber {
         this.m_CBs[DEFAULT_PUBLISHER]   = {};
         this.m_CBs[DEFAULT_PUBLISHER][DEFAULT_ROUTE] = {};
         this.m_Logger           = null;
+        this.m_ExCBs            = {};
     }
 
     /**
@@ -91,6 +103,106 @@ export default class C4Subscriber {
         return true;
     }
 
+    async subscribeEx() {
+      if (!this.isInit()) {
+        if (this.m_Logger) {
+          (this.m_Logger.err && this.m_Logger.err("C4Subscriber subscribeEx : Not init.")) ||
+          (this.m_Logger.error && this.m_Logger.error("C4Subscriber subscribeEx : Not init."));
+        }
+        throw new Error("C4Subscriber subscribeEx : Not init.");
+      }
+
+      for (let i = 0; i < this.m_SubscribeOptions.length; i++) {
+        const curSubOption = this.m_SubscribeOptions[i];
+        let PublisherName = curSubOption.publisherName || "";
+        let RoutingKey = curSubOption.routingKey || "";
+        if (PublisherName !== "") {
+          // 配置了Exchange
+          await (<C4Queue>this.m_Queue).bindExchange(PublisherName, RoutingKey);
+          await (<C4Queue>this.m_Queue).subscribe(curSubOption.subscribeOption);
+        } else {
+          // 没有Exchange，绑定到默认设置的Exchagne上
+          await (<C4Queue>this.m_Queue).bindExchange(this.m_DefaultPublisher, RoutingKey);
+          await (<C4Queue>this.m_Queue).subscribe(curSubOption.subscribeOption);
+          PublisherName = DEFAULT_PUBLISHER;
+        }
+
+        RoutingKey = RoutingKey || DEFAULT_ROUTE;
+
+        if (TypeUtils.isEmptyObj(this.m_ExCBs[PublisherName])) {
+          this.m_ExCBs[PublisherName] = new C4MQTopicRoute<{[key: string]: MsgCB}>();
+          
+        }
+        let data = this.m_ExCBs[PublisherName].match(RoutingKey);
+        if (data.find != true) {
+          this.m_ExCBs[PublisherName].insert(RoutingKey, {})
+        }
+        data = this.m_ExCBs[PublisherName].match(RoutingKey);
+        if (data.data == null ) {
+          throw new Error("C4Subscriber subscribeEx : Unknown error.");
+        }
+        for (const key in curSubOption.CBs) {
+          data.data[key] = curSubOption.CBs[key];
+        }
+      }
+
+      this.__processMsgEx();
+    }
+
+    async __processMsgEx() {
+      const Self = this;
+      await (<C4Queue>this.m_Queue).peekMsg(async function(message, headers, deliveryInfo, ack) {
+        const curExchangeName = deliveryInfo.exchange;
+        const curRoutingKey   = deliveryInfo.routingKey;
+        const curMsgType      = message.msgType;
+        if (curMsgType) {
+          let res = false;
+          try {
+            let curMsgHandler = null;
+            do {
+              if (TypeUtils.isEmptyObj(Self.m_ExCBs[curExchangeName])) break;
+              const cbs = Self.m_ExCBs[curExchangeName].match(curRoutingKey);
+              if (cbs.find !== true) break;
+              if (TypeUtils.isEmptyObj(cbs.data) || TypeUtils.isNullOrUndefined(cbs.data[curMsgType])) break;
+
+              curMsgHandler = cbs.data[curMsgType]
+            } while(false);
+
+            if (null === curMsgHandler) {
+              if (Self.m_Logger) {
+                let err = `C4Subscriber process msg : can't find Msg Handler.ExN : ${curExchangeName}, RK : ${curRoutingKey}, MT : ${curMsgType}.`;
+                Self.m_Logger.err ? Self.m_Logger.err(err) : Self.m_Logger.error(err);
+              }
+              // return null;    // 没有找到任何合适的处理方法，重新入队
+              return false;   // 没有找到合适的处理方法，抛弃消息
+            }
+
+            res = await curMsgHandler(message, headers, deliveryInfo, ack);
+          } catch (error) {
+            if (Self.m_Logger) {
+              (Self.m_Logger.err && Self.m_Logger.err(error)) ||
+              (Self.m_Logger.error && Self.m_Logger.error(error));
+              // 重新入队 res = null;
+
+              // 不再重排
+              res = false;
+            } else {
+              throw error;
+            }
+          }
+
+          return res;
+        } else {
+          // 消息格式错误，抛弃
+          return false;
+        }
+      });
+
+      setTimeout(() => {
+        Self.__processMsgEx();
+      }, 20);
+    }
+
     /**
      * 开始订阅
      */
@@ -150,6 +262,7 @@ export default class C4Subscriber {
         let Self = this;
         await (<C4Queue>this.m_Queue).peekMsg(async function (message, headers, deliveryInfo, ack) {
 
+            // TODO: 使用trieTree进行RoutingKey的匹配
             let CurExchangeName = deliveryInfo.exchange;
             let CurRoutingKey   = deliveryInfo.routingKey;
             let CurMsgType      = message.msgType;

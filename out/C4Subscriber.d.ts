@@ -6,6 +6,7 @@ export default class C4Subscriber {
     private m_SubscribeOptions;
     private m_Logger;
     private m_CBs;
+    private m_ExCBs;
     constructor();
     /**
      * 初始化
@@ -19,6 +20,8 @@ export default class C4Subscriber {
      * @param option C4SubscribeOption
      */
     addSubscribe(option: C4SubscribeOption): boolean;
+    subscribeEx(): Promise<void>;
+    __processMsgEx(): Promise<void>;
     /**
      * 开始订阅
      */

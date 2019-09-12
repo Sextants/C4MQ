@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { AMQPExchange } from "amqp";
 import { ExchangeOptions, ExchangePublishOptions } from "./C4MQTypes/C4MQTypes";
 import C4MQ from "./C4MQ";

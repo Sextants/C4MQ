@@ -12,45 +12,123 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const C4MQHelper_1 = __importDefault(require("./C4MQHelper"));
+const C4MQ_1 = __importDefault(require("./C4MQ"));
+const C4Publisher_1 = __importDefault(require("./C4Publisher"));
+const C4Subscriber_1 = __importDefault(require("./C4Subscriber"));
+const testHandler_1 = require("./testHandler");
+const mqHost = "";
+const mqLogin = "";
+const mqPassword = "";
 let MQConn;
 let CurPublihser;
-// let CurPublihser2 : C4Publisher;
+let CurPublihser2;
 let CurSubscriber;
-let Count = 0;
-let Begin = 0;
-let End = 0;
-function Publish() {
+let Count0 = 0;
+let Begin0 = 0;
+let End0 = 0;
+let Count1 = 0;
+let Begin1 = 0;
+let End1 = 0;
+function Publish0() {
     if (undefined === CurPublihser) {
         return;
     }
     CurPublihser.publish({
         msgType: "Hello",
-        msg: Count++
+        msg: Count0++
     });
-    // CurPublihser2.publish({
-    //     msgType : "Test",
-    //     msg : Count + 10
-    // }, "testKey1")
-    if (Count > 10) {
-        End = (new Date()).getTime();
-        console.log("Used : " + (End - Begin));
+    if (Count0 > 10) {
+        End0 = (new Date()).getTime();
+        console.log("Used : " + (End0 - Begin0));
     }
     else {
         setTimeout(() => {
-            Publish();
+            Publish0();
         }, 0);
     }
 }
-function Launch() {
+function Publish1() {
+    if (undefined === CurPublihser) {
+        return;
+    }
+    Count1++;
+    CurPublihser2.publish({
+        msgType: "Test",
+        msg: Count1 + 10
+    }, "testKey.abcz");
+    if (Count1 > 10) {
+        Count1 = 0;
+        End1 = (new Date()).getTime();
+        console.log("Used : " + (End1 - Begin1));
+    }
+    else {
+        setTimeout(() => {
+            Publish1();
+        }, 0);
+    }
+}
+// 不是用C4MQHelper的示例
+function SampleUseBaseObject() {
+    return __awaiter(this, void 0, void 0, function* () {
+        MQConn = new C4MQ_1.default();
+        try {
+            yield MQConn.init({
+                host: mqHost,
+                port: 5672,
+                login: mqLogin,
+                password: mqPassword,
+                connectionTimeout: 30000,
+                authMechanism: "AMQPLAIN",
+                vhost: "/",
+                noDelay: true,
+                heartbeat: 50,
+                clientProperties: {
+                    applicationName: "C4MQ"
+                }
+            }, console);
+        }
+        catch (error) {
+            console.log(error);
+            process.exit(-1);
+        }
+        CurPublihser = new C4Publisher_1.default();
+        let Res = yield CurPublihser.init(MQConn, {
+            name: "C4MQTestExchange0",
+            routingKey: "testKey",
+            type: 'direct',
+            durable: true,
+            autoDelete: false,
+            confirm: true,
+            publicOption: {}
+        }, console);
+        CurSubscriber = new C4Subscriber_1.default();
+        Res = yield CurSubscriber.init(MQConn, {
+            name: "C4MQTestQueue0",
+            publisherName: "C4MQTestExchange0",
+            durable: true,
+            autoDelete: false
+        }, console);
+        if (!Res) {
+            process.exit(-1);
+        }
+        CurSubscriber.addMQHandler(["Hello"]);
+        CurSubscriber.addSubscribe(testHandler_1.defineHandler());
+        yield CurSubscriber.subscribeEx();
+        Begin0 = (new Date()).getTime();
+        Publish0();
+    });
+}
+// 使用C4MQHelper和注解方式声明消息处理方法的实例
+function SampleUseAnnotaion() {
     return __awaiter(this, void 0, void 0, function* () {
         const curHelper = yield C4MQHelper_1.default.create({
             connections: [
                 {
                     name: "TestMQConnection",
-                    host: "",
+                    host: mqHost,
                     port: 5672,
-                    login: "",
-                    password: "",
+                    login: mqLogin,
+                    password: mqPassword,
                     connectionTimeout: 30000,
                     authMechanism: "AMQPLAIN",
                     vhost: "/",
@@ -91,227 +169,69 @@ function Launch() {
         }, console);
         if (curHelper) {
             CurPublihser = curHelper.getPublisher("TestPublisher");
-            Begin = (new Date()).getTime();
-            Publish();
+            Begin0 = (new Date()).getTime();
+            Publish0();
         }
-        // MQConn = new C4MQ();
-        // try {
-        //     await MQConn.init({
-        //         host : "",  // <any>[ "host0", "host1", "host2" ] // 连接Cluster
-        //         port : 5672,
-        //         login : "",
-        //         password : "",
-        //         connectionTimeout : 30000,
-        //         authMechanism : "AMQPLAIN",
-        //         vhost : "/",
-        //         noDelay : true,
-        //         heartbeat : 50,
-        //         clientProperties : {
-        //             applicationName : "C4MQ"
-        //         }
-        //     }, console);
-        // } catch (error) {
-        //     console.log(error);
-        //     process.exit(-1);
-        // }
-        // CurPublihser    = new C4Publisher();
-        // let Res = await CurPublihser.init(MQConn, {
-        //     name : "C4MQTestExchange0",
-        //     routingKey : "testKey",
-        //     type : 'direct',
-        //     durable : true,
-        //     autoDelete : false,
-        //     confirm : true,
-        //     publicOption : {
-        //     }
-        // }, console);
-        // CurPublihser2   = new C4Publisher();
-        // Res = await CurPublihser2.init(MQConn, {
-        //     name : "C4MQTestExchange2",
-        //     routingKey : "testKey1",
-        //     type : 'topic',
-        //     durable : true,
-        //     autoDelete : false,
-        //     confirm : true,
-        //     publicOption : {
-        //     }
-        // }, console)
-        // if (!Res) {
-        //     process.exit(-1);
-        // }
-        // CurSubscriber   = new C4Subscriber();
-        // let Res = await CurSubscriber.init(MQConn, {
-        //     name : "C4MQTestQueue0",
-        //     publisherName : "C4MQTestExchange0",
-        //     durable : true,
-        //     autoDelete : false
-        // }, console);
-        // if (!Res) {
-        //     process.exit(-1);
-        // }
-        // if (!Res) {
-        //     process.exit(-1);
-        // }
-        // CurSubscriber.addMQHandler(["Hello"]);
-        // CurSubscriber.addSubscribe(defineHandler());
-        // // CurSubscriber.addSubscribe({
-        // //     //
-        // // });
-        // await CurSubscriber.subscribe();
-        // Begin = (new Date()).getTime();
-        // Publish();
-        //
     });
 }
-Launch();
-/* import C4MQ from './C4MQ';
-import C4Exchange from './C4Exchange';
-import C4Queue from './C4Queue';
-import * as C4MQTypes from './C4MQTypes/C4MQTypes';
-import { AMQPClient } from 'amqp';
-import { CONNREFUSED } from 'dns';
-
-let MQConn : C4MQ;
-let CurExchange : C4Exchange;
-let CurQueue : C4Queue;
-
-let DLX : C4Exchange;
-let DLQ : C4Queue;
-
-let Count = 0;
-let Begin = 0;
-let End   = 0;
-function Publish() {
-    if (undefined === CurExchange) {
-        return;
-    }
-
-    // let CurPriority = parseInt((Math.random() * 10).toString());
-    // console.log("CurMsg : " + Count + ", Priority : " + CurPriority);
-    CurExchange.publish("testKey", {
-        msg : Count++
-    }, {
-        // priority : CurPriority
-        expiration : "10000"
-    });
-    if (Count > 10) {
-        End = (new Date()).getTime();
-        console.log("Used : " + (End - Begin));
-        process.exit(-1);
-    }
-    setTimeout(() => {
-        Publish();
-    }, 0);
-}
-
-function ProcessMsg() {
-    if (undefined === CurQueue) {
-        return;
-    }
-
-    CurQueue.peekMsg((message, headers, deliveryInfo, ack) => {
-        Count++;
-        console.log(JSON.stringify(message));
-        console.log(JSON.stringify(headers));
-        console.log(JSON.stringify(deliveryInfo, null, 4));
-        return true;
-    });
-
-    if (Count >= 99999) {
-        End = (new Date()).getTime();
-        console.log("Used : " + (End - Begin));
-        process.exit(-1);
-    }
-
-    setTimeout(() => {
-        ProcessMsg();
-    }, 0);
-}
-
-async function Launch() {
-    MQConn  = new C4MQ();
-    try {
-        await MQConn.init({
-            host : "host",
-            port : 5672,
-            login : "username",
-            password : "password",
-            connectionTimeout : 30000,
-            authMechanism : "AMQPLAIN",
-            vhost : "/",
-            noDelay : true,
-            heartbeat : 5,
-            clientProperties : {
-                applicationName : "C4MQ"
-            }
+// 使用C4MQHelper和对象方式声明消息处理方法的实例
+function SampleUseObject() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const curHelper = yield C4MQHelper_1.default.create({
+            connections: [
+                {
+                    name: "TestMQConnection",
+                    host: mqHost,
+                    port: 5672,
+                    login: mqLogin,
+                    password: mqPassword,
+                    connectionTimeout: 30000,
+                    authMechanism: "AMQPLAIN",
+                    vhost: "/",
+                    noDelay: true,
+                    heartbeat: 50,
+                    clientProperties: {
+                        applicationName: "C4MQ"
+                    }
+                }
+            ],
+            publishers: [
+                {
+                    name: "TestPublisher2",
+                    connection: "TestMQConnection",
+                    routingKey: "testKey.abc",
+                    type: "topic",
+                    durable: true,
+                    autoDelete: false,
+                    confirm: true,
+                    publicOption: {}
+                }
+            ],
+            subscribers: [
+                {
+                    name: "TestSubscriber2",
+                    connection: "TestMQConnection",
+                    publisherName: "TestPublisher2",
+                    durable: true,
+                    autoDelete: false,
+                    handlers: ["TestTopic"],
+                    subscribeLater: false
+                }
+            ],
+            handlerLoadPaths: [
+                './out/MQHandlers'
+            ]
         }, console);
-    } catch (error) {
-        console.log(error);
-        process.exit(-1);
-    }
-    
-    CurExchange = new C4Exchange();
-    DLX         = new C4Exchange();
-    await CurExchange.declared(MQConn, "C4MQTestExchange", {
-        type : 'direct',
-        durable : true,
-        autoDelete : false,
-        confirm : true
-    });
-    await DLX.declared(MQConn, "C4MQTestDLX", {
-        type : "topic",
-        durable : true,
-        autoDelete : false,
-        confirm : true
-    });
-
-
-    console.log('xxxx')
-    CurQueue    = new C4Queue();
-    DLQ         = new C4Queue();
-    await CurQueue.declared(MQConn, "C4MQTestQueue", {
-        durable : true,
-        autoDelete : false,
-        arguments : {
-            "x-max-priority" : 10,
-            "x-message-ttl" : 60000,
-            "x-dead-letter-exchange" : "C4MQTestDLX",
-            "x-dead-letter-routing-key" : "testKey"
+        if (curHelper) {
+            CurPublihser = curHelper.getPublisher("TestPublisher");
+            CurPublihser2 = curHelper.getPublisher("TestPublisher2");
+            Begin1 = (new Date()).getTime();
+            Publish1();
         }
     });
-    await DLQ.declared(MQConn, "C4MQTestDLQ", {
-        durable : true,
-        autoDelete : false
-    });
-
-    console.log('zzzzz')
-    await CurQueue.bindExchange("C4MQTestExchange", "testKey");
-    await CurQueue.bindExchange("C4MQTestExchange", "123");
-    await DLQ.bindExchange("C4MQTestDLX", "#");
-
-    CurQueue.subscribe({
-        ack : true,
-        prefetchCount : 16
-    });
-
-    Begin = (new Date()).getTime();
-    // Publish();
-    // Publish();
-    // Publish();
-    // Publish();
-    // Publish();
-    // Publish();
-    // Publish();
-    Publish();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
-    // ProcessMsg();
 }
-
-Launch(); */
+// 解注释执行相应的示例代码
+// SampleUseBaseObject();
+// SampleUseAnnotaion();
+// SampleUseObject();
 //# sourceMappingURL=main.js.map
